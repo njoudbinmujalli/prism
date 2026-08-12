@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRISM</title>
+<style>
+  :root {
+    /* Deep gradient backdrop — glass needs something colorful behind it to refract */
+    --bg-a: #0B0A14;
+    --bg-b: #150E1F;
+    --bg-c: #0A1218;
+
+    --glass-fill: rgba(255, 255, 255, 0.06);
+    --glass-fill-strong: rgba(255, 255, 255, 0.10);
+    --glass-border: rgba(255, 255, 255, 0.14);
+    --glass-highlight: rgba(255, 255, 255, 0.35);
+
+    --text: #F7F7FA;
+    --muted: #B7B9C6;
+    --muted-dim: #7C7E8C;
+
+    --novelty: #A78BFA;
+    --feasibility: #5EEAD4;
+    --impact: #FBBF24;
+    --risk: #FB7185;
+
+    --novelty-dim: rgba(167, 139, 250, 0.18);
+    --feasibility-dim: rgba(94, 234, 212, 0.18);
+    --impact-dim: rgba(251, 191, 36, 0.18);
+    --risk-dim: rgba(251, 113, 133, 0.18);
+
+    --font-display: -apple-system, "SF Pro Display", "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+    --font-body: -apple-system, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+    --font-mono: "SF Mono", "SFMono-Regular", ui-monospace, "IBM Plex Mono", monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+  html, body { height: 100%; }
+
+  body {
+    background: linear-gradient(160deg, var(--bg-a) 0%, var(--bg-b) 45%, var(--bg-c) 100%);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    letter-spacing: -0.011em;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Ambient color blobs behind the glass — this is what makes blur read as "glass" */
+  body::before, body::after {
+    content: '';
+    position: fixed;
+    width: 560px;
+    height: 560px;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.35;
+    z-index: 0;
+    pointer-events: none;
+  }
+  body::before {
+    background: radial-gradient(circle, var(--novelty), transparent 70%);
+    top: -140px;
+    left: -120px;
+  }
+  body::after {
+    background: radial-gradient(circle, var(--feasibility), transparent 70%);
+    bottom: -160px;
+    right: -100px;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 0 28px 80px; }
+
+  header { padding: 32px 0 0; }
+  .header-row { display: flex; align-items: center; justify-content: space-between; }
+  .mark { display: flex; align-items: center; gap: 9px; }
+  .mark svg { width: 22px; height: 22px; }
+  .mark-text { font-family: var(--font-display); font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
+  .eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-dim); }
+
+  .hero { padding: 48px 0 28px; text-align: center; }
+  .hero-eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(32px, 4.8vw, 48px); letter-spacing: -0.025em; line-height: 1.12; max-width: 720px; margin: 0 auto 16px; }
+  h1 .accent-word { background: linear-gradient(90deg, var(--novelty), var(--feasibility), var(--impact), var(--risk)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero-sub { color: var(--muted); font-size: 16px; font-weight: 400; max-width: 460px; margin: 0 auto; }
+
+  .glass {
+    background: var(--glass-fill);
+    backdrop-filter: blur(28px) saturate(160%);
+    -webkit-backdrop-filter: blur(28px) saturate(160%);
+    border: 1px solid var(--glass-border);
+    box-shadow:
+      inset 0 1px 0 var(--glass-highlight),
+      0 8px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  .input-panel { border-radius: 20px; padding: 26px; margin: 40px 0 48px; }
+  .field-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 9px; display: block; }
+  textarea, .text-input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    font-weight: 400;
+    padding: 14px 16px;
+    resize: vertical;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  textarea::placeholder { color: var(--muted-dim); }
+  textarea:focus, .text-input:focus { outline: none; border-color: var(--glass-highlight); background: rgba(0, 0, 0, 0.3); }
+  .idea-field { margin-bottom: 18px; }
+  .idea-field textarea { min-height: 88px; }
+  .constraints-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
+  .submit-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+
+  .refract-btn {
+    background: linear-gradient(135deg, var(--text), #E4E4EC);
+    color: #0A0A12;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    border: none;
+    border-radius: 12px;
+    padding: 13px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.12);
+  }
+  .refract-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(255, 255, 255, 0.18); }
+  .refract-btn:active { transform: translateY(0); }
+  .refract-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .refract-hint { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted-dim); }
+
+  .section-label { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+  .section-label .line { flex: 1; height: 1px; background: var(--glass-border); }
+  .section-label span { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted-dim); white-space: nowrap; }
+
+  .judges-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 56px; }
+  .judge-card {
+    border-radius: 18px;
+    padding: 20px 18px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s ease;
+  }
+  .judge-card:hover { transform: translateY(-2px); }
+  .judge-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    filter: blur(1px);
+  }
+  .judge-card.novelty::before { background: linear-gradient(90deg, var(--novelty), transparent); }
+  .judge-card.feasibility::before { background: linear-gradient(90deg, var(--feasibility), transparent); }
+  .judge-card.impact::before { background: linear-gradient(90deg, var(--impact), transparent); }
+  .judge-card.risk::before { background: linear-gradient(90deg, var(--risk), transparent); }
+
+  .judge-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+  .judge-name { font-family: var(--font-display); font-weight: 600; font-size: 16px; letter-spacing: -0.01em; }
+  .judge-role { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted-dim); margin-top: 3px; }
+  .score-badge { font-family: var(--font-mono); font-size: 21px; font-weight: 600; line-height: 1; }
+  .judge-card.novelty .score-badge { color: var(--novelty); }
+  .judge-card.feasibility .score-badge { color: var(--feasibility); }
+  .judge-card.impact .score-badge { color: var(--impact); }
+  .judge-card.risk .score-badge { color: var(--risk); }
+  .score-max { font-size: 11px; color: var(--muted-dim); font-weight: 400; }
+
+  .band-pill { display: inline-block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; margin-bottom: 13px; backdrop-filter: blur(4px); }
+  .judge-card.novelty .band-pill { background: var(--novelty-dim); color: var(--novelty); }
+  .judge-card.feasibility .band-pill { background: var(--feasibility-dim); color: var(--feasibility); }
+  .judge-card.impact .band-pill { background: var(--impact-dim); color: var(--impact); }
+  .judge-card.risk .band-pill { background: var(--risk-dim); color: var(--risk); }
+
+  .judge-verdict { font-size: 14.5px; font-weight: 400; color: var(--text); line-height: 1.5; margin-bottom: 14px; }
+  .judge-detail { font-size: 13px; color: var(--muted); border-top: 1px solid var(--glass-border); padding-top: 12px; }
+  .judge-detail strong { color: var(--muted); display: block; font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-weight: 500; }
+  .judge-detail + .judge-detail { margin-top: 10px; padding-top: 10px; }
+
+  .synthesis-panel {
+    position: relative;
+    border-radius: 24px;
+    padding: 2px;
+    background: linear-gradient(120deg, var(--novelty), var(--feasibility), var(--impact), var(--risk));
+    margin-bottom: 40px;
+    box-shadow: 0 12px 48px rgba(139, 127, 245, 0.15);
+  }
+  .synthesis-inner {
+    background: rgba(10, 9, 16, 0.82);
+    backdrop-filter: blur(32px) saturate(160%);
+    -webkit-backdrop-filter: blur(32px) saturate(160%);
+    border-radius: 22px;
+    padding: 30px 32px;
+  }
+  .synthesis-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; flex-wrap: wrap; gap: 10px; }
+  .synthesis-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .decision-pill { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.03em; text-transform: uppercase; padding: 6px 13px; border-radius: 20px; background: var(--glass-fill-strong); color: var(--text); border: 1px solid var(--glass-border); backdrop-filter: blur(8px); }
+  .synthesis-verdict { font-family: var(--font-display); font-weight: 600; font-size: 21px; letter-spacing: -0.015em; line-height: 1.35; max-width: 680px; margin: 16px 0 26px; }
+
+  .tension-block { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--glass-border); border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; backdrop-filter: blur(8px); }
+  .tension-tag { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+  .tension-node { font-family: var(--font-mono); font-size: 10.5px; padding: 3px 9px; border-radius: 20px; }
+  .tension-vs { font-size: 11px; color: var(--muted-dim); font-family: var(--font-mono); }
+  .tension-desc { font-size: 14px; color: var(--muted); line-height: 1.55; margin-bottom: 8px; }
+  .tension-action { font-size: 13.5px; color: var(--text); border-top: 1px solid var(--glass-border); padding-top: 10px; }
+  .tension-action strong { color: var(--muted); font-family: var(--font-mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; font-weight: 500; }
+
+  .actions-row { margin-top: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .action-item { border-top: 1px solid var(--glass-border); padding-top: 12px; }
+  .action-rank { font-family: var(--font-mono); font-size: 10px; color: var(--muted-dim); margin-bottom: 6px; }
+  .action-text { font-size: 14px; line-height: 1.5; }
+
+  .dissent-block { margin-top: 22px; border-top: 1px solid var(--glass-border); padding-top: 16px; }
+  .dissent-label { font-family: var(--font-mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted-dim); margin-bottom: 6px; }
+  .dissent-text { font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+  .status-line { text-align: center; padding: 40px 0; font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+  .status-line.error { color: var(--risk); }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--glass-border); border-top-color: var(--text); border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 10px; vertical-align: -2px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  footer { text-align: center; padding: 20px 0 0; font-family: var(--font-mono); font-size: 11px; color: var(--muted-dim); }
+
+  @media (max-width: 760px) {
+    .judges-grid { grid-template-columns: 1fr 1fr; }
+    .constraints-row { grid-template-columns: 1fr; }
+    .actions-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 480px) {
+    .judges-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="header-row">
+      <div class="mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2 L22 20 L2 20 Z" stroke="#F4F4F0" stroke-width="1.4" fill="none"/></svg>
+        <span class="mark-text">PRISM</span>
+      </div>
+      <span class="eyebrow">Idea Refraction Panel</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-eyebrow">Four judges. One beam of light.</div>
+    <h1>See your idea<br>from <span class="accent-word">every angle</span><br>before the judges do.</h1>
+    <p class="hero-sub">Submit an idea. PRISM splits it through four independent specialists, then recombines their judgment into one verdict.</p>
+  </section>
+
+  <div class="input-panel glass">
+    <div class="idea-field">
+      <label class="field-label">Your idea</label>
+      <textarea id="idea-input" placeholder="Describe the project in a few sentences — what it does and who it's for."></textarea>
+    </div>
+    <div class="constraints-row">
+      <div>
+        <label class="field-label">Time available</label>
+        <input class="text-input" id="timeframe-input" type="text" value="24 hours">
+      </div>
+      <div>
+        <label class="field-label">Team context</label>
+        <input class="text-input" id="team-input" type="text" value="2 people, general skills">
+      </div>
+    </div>
+    <div class="submit-row">
+      <span class="refract-hint">4 independent judges → 1 synthesis</span>
+      <button class="refract-btn" id="submit-btn" onclick="runPrism()">
+        Refract idea
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="results"></div>
+
+</div>
+
+<footer>PRISM — built for AAASEC2</footer>
+
+<script>
+// Change this if your API runs somewhere other than localhost:8000
+const API_BASE = "http://127.0.0.1:8000";
+
+const BAND_LABELS = {
+  very_weak: "very weak", weak: "weak", moderate: "moderate",
+  strong: "strong", exceptional: "exceptional"
+};
+
+const AGENT_META = {
+  novelty:      { cls: "novelty",      name: "Novelty",      role: "originality judge" },
+  feasibility:  { cls: "feasibility",  name: "Feasibility",  role: "buildability judge" },
+  impact:       { cls: "impact",       name: "Impact",       role: "value judge" },
+  risk_ethics:  { cls: "risk",         name: "Risk / Ethics",role: "safety judge" }
+};
+
+async function runPrism() {
+  const idea = document.getElementById("idea-input").value.trim();
+  const timeframe = document.getElementById("timeframe-input").value.trim() || "24 hours";
+  const team = document.getElementById("team-input").value.trim() || "small team";
+  const btn = document.getElementById("submit-btn");
+  const results = document.getElementById("results");
+
+  if (!idea) {
+    results.innerHTML = `<div class="status-line error">Please describe an idea first.</div>`;
+    return;
+  }
+
+  btn.disabled = true;
+  results.innerHTML = `<div class="status-line"><span class="spinner"></span>Running four judges — this can take up to a minute…</div>`;
+
+  try {
+    const res = await fetch(`${API_BASE}/evaluate/full`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea, timeframe, team_context: team })
+    });
+
+    if (!res.ok) {
+      throw new Error(`API returned ${res.status}`);
+    }
+
+    const data = await res.json();
+
+    if (data.status === "partial_failure") {
+      results.innerHTML = `<div class="status-line error">
+        One or more judges failed to respond (${data.failed_agents.join(", ")}). Try again.
+      </div>`;
+      btn.disabled = false;
+      return;
+    }
+
+    renderResults(data);
+  } catch (err) {
+    results.innerHTML = `<div class="status-line error">
+      Something went wrong: ${err.message}. Is the PRISM API running at ${API_BASE}?
+    </div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderResults(data) {
+  const s = data.specialists;
+  const synth = data.synthesis.data;
+
+  let html = `
+    <div class="section-label"><span>Independent verdicts</span><div class="line"></div></div>
+    <div class="judges-grid">
+      ${renderJudgeCard("novelty", s.novelty.data)}
+      ${renderJudgeCard("feasibility", s.feasibility.data)}
+      ${renderJudgeCard("impact", s.impact.data)}
+      ${renderJudgeCard("risk_ethics", s.risk_ethics.data)}
+    </div>
+    <div class="section-label"><span>Synthesis</span><div class="line"></div></div>
+    <div class="synthesis-panel">
+      <div class="synthesis-inner">
+        <div class="synthesis-top">
+          <span class="synthesis-label">Lead judge verdict</span>
+          <span class="decision-pill">${synth.decision.replace(/_/g, " ")}</span>
+        </div>
+        <p class="synthesis-verdict">${escapeHtml(synth.one_line_verdict)}</p>
+        ${synth.tensions.map(renderTension).join("")}
+        <div class="actions-row">
+          ${synth.top_3_actions.sort((a,b) => a.rank - b.rank).map(renderAction).join("")}
+        </div>
+        <div class="dissent-block">
+          <div class="dissent-label">Dissent note</div>
+          <div class="dissent-text">${escapeHtml(synth.dissent_note)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("results").innerHTML = html;
+}
+
+function renderJudgeCard(agentId, d) {
+  const meta = AGENT_META[agentId];
+  let detailHtml = "";
+
+  if (agentId === "novelty") {
+    const top = d.closest_existing[0];
+    detailHtml = `<div class="judge-detail"><strong>Closest existing</strong>${escapeHtml(top.name)} — ${escapeHtml(top.what_it_does)}</div>`;
+  } else if (agentId === "feasibility") {
+    detailHtml = `<div class="judge-detail"><strong>Descope if needed</strong>${escapeHtml(d.descope_recommendation)}</div>`;
+  } else if (agentId === "impact") {
+    detailHtml = `<div class="judge-detail"><strong>Primary beneficiary</strong>${escapeHtml(d.primary_beneficiary.who)}</div>`;
+  } else if (agentId === "risk_ethics") {
+    const flagged = d.findings.filter(f => f.present);
+    const text = flagged.length
+      ? flagged.map(f => f.category.replace(/_/g, " ")).join(", ")
+      : "No risks flagged";
+    detailHtml = `<div class="judge-detail"><strong>Flagged categories</strong>${escapeHtml(text)}</div>`;
+  }
+
+  return `
+    <div class="judge-card glass ${meta.cls}">
+      <div class="judge-top">
+        <div>
+          <div class="judge-name">${meta.name}</div>
+          <div class="judge-role">${meta.role}</div>
+        </div>
+        <div class="score-badge">${d.score}<span class="score-max">/10</span></div>
+      </div>
+      <span class="band-pill">${BAND_LABELS[d.band]}</span>
+      <p class="judge-verdict">${escapeHtml(d.verdict_line)}</p>
+      ${detailHtml}
+    </div>
+  `;
+}
+
+function renderTension(t) {
+  const [a, b] = t.between;
+  return `
+    <div class="tension-block">
+      <div class="tension-tag">
+        <span class="tension-node" style="background:var(--${cssColorFor(a)}-dim);color:var(--${cssColorFor(a)})">${a}</span>
+        <span class="tension-vs">vs</span>
+        <span class="tension-node" style="background:var(--${cssColorFor(b)}-dim);color:var(--${cssColorFor(b)})">${b}</span>
+      </div>
+      <p class="tension-desc">${escapeHtml(t.description)}</p>
+      <div class="tension-action"><strong>Recommended action</strong>${escapeHtml(t.recommended_action)}</div>
+    </div>
+  `;
+}
+
+function renderAction(a) {
+  return `
+    <div class="action-item">
+      <div class="action-rank">0${a.rank} — ${a.owner_dimension.replace(/_/g, " ")}</div>
+      <div class="action-text">${escapeHtml(a.action)}</div>
+    </div>
+  `;
+}
+
+function cssColorFor(agentId) {
+  return agentId === "risk_ethics" ? "risk" : agentId;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>
