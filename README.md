@@ -15,10 +15,10 @@ When developing a project idea, it's easy to overlook important dimensions — a
 ## How it works
 
 1. **Four specialist judges evaluate independently, in parallel:**
-   - 🔍 **Novelty** — how original is this, and what already exists that resembles it (uses live web search to verify)
-   - ⚙️ **Feasibility** — can this actually be built, by this team, in the stated time
-   - 🎯 **Impact** — who specifically benefits, and how clearly is the problem defined
-   - ⚖️ **Risk/Ethics** — data privacy, bias/fairness, safety/misuse, legal/compliance exposure
+   - **Novelty** — how original is this, and what already exists that resembles it (uses live web search to verify)
+   - **Feasibility** — can this actually be built, by this team, in the stated time
+   - **Impact** — who specifically benefits, and how clearly is the problem defined
+   - **Risk/Ethics** — data privacy, bias/fairness, safety/misuse, legal/compliance exposure
 2. **Tensions between judges are computed in Python**, not guessed by an LLM — score gaps of 3+ points between related dimensions are flagged automatically.
 3. **A Synthesis agent** reads all four verdicts plus the computed tensions, and produces one final recommendation (`advance_as_is` / `advance_with_changes` / `major_rework` / `do_not_pursue`), the top 3 actions to take, and an honest dissent note about the judgment itself.
 
