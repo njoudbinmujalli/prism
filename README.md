@@ -109,3 +109,16 @@ Then visit `http://127.0.0.1:5500/index.html`. Submit an idea, a time constraint
 ## Team
 
 Built by Njoud Bin mujalli, Nadin alrabie, Raneem Aljudaibi as part of the SDAIA AI Agents Engineering bootcamp (AAASEC2 cohort). 
+
+
+**Advanced Agentic AI Systems Engineering**
+**هندسة أنظمة الذكاء الاصطناعي الوكيلي المتقدمة**
+
+SDAIA Academy
+August 9–13, 2026
+
+SDAIA Academy GitHub:
+
+https://github.com/SDAIAAcademy
+
+---
