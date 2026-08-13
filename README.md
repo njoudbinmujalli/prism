@@ -108,4 +108,4 @@ Then visit `http://127.0.0.1:5500/index.html`. Submit an idea, a time constraint
 
 ## Team
 
-Built by Njoud Binmujalli as part of the SDAIA AI Agents Engineering bootcamp (AAASEC2 cohort).
+Built by Njoud Bin mujalli, Nadin alrabie, Raneem Aljudaibi as part of the SDAIA AI Agents Engineering bootcamp (AAASEC2 cohort). 
